@@ -6,9 +6,13 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.http import JsonResponse
 from django.utils import timezone
+from datetime import timedelta
 from django.db.models import Q
 from .models import Motion, MotionResponse, Vote, Comment
 from .forms import MotionForm, MotionResponseForm, CommentForm
+
+# Default response deadline in days
+RESPONSE_DEADLINE_DAYS = 30
 
 
 class MotionFeedView(ListView):
@@ -55,6 +59,11 @@ class MotionDetailView(DetailView):
         context['comment_form'] = CommentForm()
         context['comments'] = self.object.comments.filter(is_hidden=False)
 
+        # Check deadline status
+        if self.object.response_deadline:
+            context['is_overdue'] = timezone.now() > self.object.response_deadline
+            context['days_remaining'] = (self.object.response_deadline - timezone.now()).days
+
         if self.request.user.is_authenticated:
             user_vote = Vote.objects.filter(
                 motion=self.object,
@@ -74,10 +83,22 @@ class MotionCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.author = self.request.user
         form.instance.lga = self.request.user.lga
+
+        was_draft = form.instance.status != 'published'
         if form.instance.status == 'published':
             form.instance.published_at = timezone.now()
+            # Set response deadline
+            form.instance.response_deadline = timezone.now() + timedelta(days=RESPONSE_DEADLINE_DAYS)
+
+        response = super().form_valid(form)
+
+        # Send notifications if newly published
+        if form.instance.status == 'published' and was_draft:
+            from notifications.services import notify_new_motion
+            notify_new_motion(self.object)
+
         messages.success(self.request, 'Motion created successfully!')
-        return super().form_valid(form)
+        return response
 
 
 class MotionUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -93,10 +114,22 @@ class MotionUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return reverse_lazy('motion_detail', kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):
+        was_draft = self.get_object().status != 'published'
+
         if form.instance.status == 'published' and not form.instance.published_at:
             form.instance.published_at = timezone.now()
+            # Set response deadline
+            form.instance.response_deadline = timezone.now() + timedelta(days=RESPONSE_DEADLINE_DAYS)
+
+        response = super().form_valid(form)
+
+        # Send notifications if newly published
+        if form.instance.status == 'published' and was_draft:
+            from notifications.services import notify_new_motion
+            notify_new_motion(self.object)
+
         messages.success(self.request, 'Motion updated successfully!')
-        return super().form_valid(form)
+        return response
 
 
 @login_required
