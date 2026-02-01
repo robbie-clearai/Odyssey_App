@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block title %}Public Dashboard{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto mt-8 px-4">
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">Public Accountability Dashboard</h1>
+    <p class="text-gray-600 mb-8">Real-time transparency on motion outcomes and institutional performance</p>
+
+    <!-- Key Metrics -->
+    <div class="grid md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <div class="text-3xl font-bold text-civic-blue">{{ total_motions }}</div>
+            <div class="text-sm text-gray-600">Total Motions</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <div class="text-3xl font-bold text-civic-green">{{ response_rate }}%</div>
+            <div class="text-sm text-gray-600">Response Rate</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <div class="text-3xl font-bold text-civic-green">{{ delivery_counts.completed }}</div>
+            <div class="text-sm text-gray-600">Completed</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <div class="text-3xl font-bold text-civic-amber">{{ delivery_counts.on_track }}</div>
+            <div class="text-sm text-gray-600">In Progress</div>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8 mb-8">
+        <!-- Status Breakdown -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">Motion Status</h2>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span>
+                        <span>Accepted</span>
+                    </div>
+                    <span class="font-semibold">{{ status_counts.accepted }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <span class="w-3 h-3 rounded-full bg-amber-500 mr-2"></span>
+                        <span>Modified</span>
+                    </div>
+                    <span class="font-semibold">{{ status_counts.modified }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <span class="w-3 h-3 rounded-full bg-red-500 mr-2"></span>
+                        <span>Rejected</span>
+                    </div>
+                    <span class="font-semibold">{{ status_counts.rejected }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
+                        <span>Pending Response</span>
+                    </div>
+                    <span class="font-semibold">{{ status_counts.pending }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delivery Traffic Light -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">Delivery Status</h2>
+            <div class="space-y-4">
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <span class="flex items-center">
+                            <span class="w-4 h-4 rounded-full bg-green-500 mr-2"></span>
+                            Completed
+                        </span>
+                        <span class="font-semibold">{{ delivery_counts.completed }}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-green-500 h-2 rounded-full" style="width: {% widthratio delivery_counts.completed total_motions 100 %}%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <span class="flex items-center">
+                            <span class="w-4 h-4 rounded-full bg-amber-500 mr-2"></span>
+                            On Track
+                        </span>
+                        <span class="font-semibold">{{ delivery_counts.on_track }}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-amber-500 h-2 rounded-full" style="width: {% widthratio delivery_counts.on_track total_motions 100 %}%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <span class="flex items-center">
+                            <span class="w-4 h-4 rounded-full bg-red-500 mr-2"></span>
+                            Delayed
+                        </span>
+                        <span class="font-semibold">{{ delivery_counts.delayed }}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-red-500 h-2 rounded-full" style="width: {% widthratio delivery_counts.delayed total_motions 100 %}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8 mb-8">
+        <!-- By LGA -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">By Local Government Area</h2>
+            <div class="space-y-4">
+                {% for lga in lga_stats %}
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                        <div class="font-medium">{{ lga.name }}</div>
+                        <div class="text-sm text-gray-500">{{ lga.total }} motion{{ lga.total|pluralize }}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-semibold text-civic-green">{{ lga.responded }}</div>
+                        <div class="text-xs text-gray-500">responded</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- By Jurisdiction -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">Jurisdictional Escalator</h2>
+            <p class="text-sm text-gray-600 mb-4">Motions routed by government level</p>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                    <div class="flex items-center">
+                        <span class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                            <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                            </svg>
+                        </span>
+                        <span>Local Council</span>
+                    </div>
+                    <span class="text-xl font-bold text-blue-600">{{ jurisdiction_stats.local }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                    <div class="flex items-center">
+                        <span class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                            <svg class="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/>
+                            </svg>
+                        </span>
+                        <span>NSW State</span>
+                    </div>
+                    <span class="text-xl font-bold text-purple-600">{{ jurisdiction_stats.state }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <div class="flex items-center">
+                        <span class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                            <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" clip-rule="evenodd"/>
+                            </svg>
+                        </span>
+                        <span>Commonwealth</span>
+                    </div>
+                    <span class="text-xl font-bold text-green-600">{{ jurisdiction_stats.federal }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Responses -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Recent Official Responses</h2>
+        <div class="space-y-4">
+            {% for response in recent_responses %}
+            <a href="{% url 'motion_detail' response.motion.pk %}" class="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="font-medium text-gray-900">{{ response.motion.title }}</span>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Responded by {{ response.accountable_owner.username }} &bull; {{ response.created_at|date:"M d, Y" }}
+                        </p>
+                    </div>
+                    <span class="text-xs px-2 py-1 rounded-full
+                        {% if response.decision == 'accept' %}bg-green-100 text-green-800
+                        {% elif response.decision == 'modify' %}bg-amber-100 text-amber-800
+                        {% else %}bg-red-100 text-red-800{% endif %}">
+                        {{ response.get_decision_display }}
+                    </span>
+                </div>
+            </a>
+            {% empty %}
+            <p class="text-gray-500 text-center py-4">No responses yet</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

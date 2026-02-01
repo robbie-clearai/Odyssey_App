@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Respond to Motion{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto mt-8 px-4">
+    <a href="{% url 'motion_detail' motion.pk %}" class="text-civic-blue hover:underline mb-4 inline-block">&larr; Back to motion</a>
+
+    <div class="bg-white rounded-xl shadow-lg p-8">
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Official Response</h1>
+        <p class="text-gray-600 mb-6">Respond to: <strong>{{ motion.title }}</strong></p>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <div>
+                <label for="id_decision" class="block text-sm font-medium text-gray-700 mb-1">Decision *</label>
+                {{ form.decision }}
+                {% if form.decision.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.decision.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="id_reasons" class="block text-sm font-medium text-gray-700 mb-1">Reasons (Plain English) *</label>
+                {{ form.reasons }}
+                {% if form.reasons.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.reasons.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="bg-green-50 p-4 rounded-lg">
+                <h3 class="font-medium text-gray-900 mb-3">For Accepted/Modified Motions</h3>
+
+                <div class="mb-4">
+                    <label for="id_delivery_plan" class="block text-sm font-medium text-gray-700 mb-1">Delivery Plan</label>
+                    {{ form.delivery_plan }}
+                </div>
+
+                <div class="mb-4">
+                    <label for="id_milestones" class="block text-sm font-medium text-gray-700 mb-1">Milestones</label>
+                    {{ form.milestones }}
+                </div>
+
+                <div>
+                    <label for="id_due_date" class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                    {{ form.due_date }}
+                </div>
+            </div>
+
+            <div class="bg-red-50 p-4 rounded-lg">
+                <h3 class="font-medium text-gray-900 mb-3">For Rejected Motions</h3>
+                <div>
+                    <label for="id_alternative_pathway" class="block text-sm font-medium text-gray-700 mb-1">Alternative Pathway</label>
+                    <p class="text-xs text-gray-500 mb-2">If rejecting, provide an alternative way forward</p>
+                    {{ form.alternative_pathway }}
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-4">
+                <a href="{% url 'motion_detail' motion.pk %}" class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Cancel</a>
+                <button type="submit" class="px-6 py-2 bg-civic-blue text-white rounded-lg hover:bg-blue-700">
+                    Submit Response
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

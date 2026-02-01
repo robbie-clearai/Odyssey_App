@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Motion Feed{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-8 px-4">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Youth Motions</h1>
+        {% if user.is_authenticated %}
+        <a href="{% url 'motion_create' %}" class="bg-civic-blue text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">
+            New Motion
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <form method="get" class="flex flex-wrap gap-4">
+            <div class="flex-1 min-w-[150px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">LGA</label>
+                <select name="lga" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white">
+                    <option value="">All LGAs</option>
+                    {% for code, name in lga_choices %}
+                    <option value="{{ code }}" {% if current_lga == code %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex-1 min-w-[150px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Jurisdiction</label>
+                <select name="jurisdiction" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white">
+                    <option value="">All Levels</option>
+                    {% for code, name in jurisdiction_choices %}
+                    <option value="{{ code }}" {% if current_jurisdiction == code %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                    Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Motion List -->
+    <div class="space-y-4">
+        {% for motion in motions %}
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <a href="{% url 'motion_detail' motion.pk %}" class="text-xl font-semibold text-gray-900 hover:text-civic-blue">
+                        {{ motion.title }}
+                    </a>
+                    <p class="text-sm text-gray-500 mt-1">
+                        by {{ motion.author.username }} &bull; {{ motion.get_lga_display }} &bull; {{ motion.published_at|date:"M d, Y" }}
+                    </p>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-full
+                    {% if motion.jurisdiction == 'local' %}bg-blue-100 text-blue-800
+                    {% elif motion.jurisdiction == 'state' %}bg-purple-100 text-purple-800
+                    {% else %}bg-green-100 text-green-800{% endif %}">
+                    {{ motion.get_jurisdiction_display }}
+                </span>
+            </div>
+
+            <p class="text-gray-600 mb-4 line-clamp-2">{{ motion.proposed_action|truncatewords:30 }}</p>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4 text-sm">
+                    <span class="flex items-center text-green-600">
+                        <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
+                        </svg>
+                        {{ motion.approval_count }}
+                    </span>
+                    <span class="flex items-center text-red-600">
+                        <svg class="w-5 h-5 mr-1 transform rotate-180" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
+                        </svg>
+                        {{ motion.disapproval_count }}
+                    </span>
+                    <span class="text-gray-500">
+                        {{ motion.comments.count }} comment{{ motion.comments.count|pluralize }}
+                    </span>
+                </div>
+
+                {% if motion.status != 'published' %}
+                <span class="text-xs px-2 py-1 rounded-full
+                    {% if motion.status == 'accepted' %}bg-green-100 text-green-800
+                    {% elif motion.status == 'modified' %}bg-amber-100 text-amber-800
+                    {% elif motion.status == 'rejected' %}bg-red-100 text-red-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ motion.get_status_display }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="bg-white rounded-lg shadow p-8 text-center">
+            <p class="text-gray-600">No motions found matching your filters.</p>
+            {% if user.is_authenticated %}
+            <a href="{% url 'motion_create' %}" class="inline-block mt-4 text-civic-blue hover:underline">Be the first to create a motion</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="flex justify-center mt-8 space-x-2">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if current_lga %}&lga={{ current_lga }}{% endif %}{% if current_jurisdiction %}&jurisdiction={{ current_jurisdiction }}{% endif %}"
+           class="px-4 py-2 bg-white rounded-lg shadow hover:bg-gray-50">Previous</a>
+        {% endif %}
+
+        <span class="px-4 py-2 bg-civic-blue text-white rounded-lg">
+            {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if current_lga %}&lga={{ current_lga }}{% endif %}{% if current_jurisdiction %}&jurisdiction={{ current_jurisdiction }}{% endif %}"
+           class="px-4 py-2 bg-white rounded-lg shadow hover:bg-gray-50">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

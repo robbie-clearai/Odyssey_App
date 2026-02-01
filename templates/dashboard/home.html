@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-civic-blue text-white py-16">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+        <h1 class="text-4xl font-bold mb-4">Hunter Youth Civic Power-Share Network</h1>
+        <p class="text-xl text-blue-100 mb-8">
+            Moving beyond youth voice to youth power. Submit motions, shape policy, and hold institutions accountable.
+        </p>
+        <div class="flex justify-center gap-4">
+            {% if user.is_authenticated %}
+            <a href="{% url 'motion_create' %}" class="bg-white text-civic-blue px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
+                Create a Motion
+            </a>
+            {% else %}
+            <a href="{% url 'signup' %}" class="bg-white text-civic-blue px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition">
+                Join Now
+            </a>
+            {% endif %}
+            <a href="{% url 'public_dashboard' %}" class="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-civic-blue transition">
+                View Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Bar -->
+<div class="bg-white shadow-md">
+    <div class="max-w-4xl mx-auto px-4 py-6">
+        <div class="grid grid-cols-3 gap-4 text-center">
+            <div>
+                <div class="text-3xl font-bold text-civic-blue">{{ total_motions }}</div>
+                <div class="text-sm text-gray-600">Published Motions</div>
+            </div>
+            <div>
+                <div class="text-3xl font-bold text-civic-green">{{ total_responses }}</div>
+                <div class="text-sm text-gray-600">Official Responses</div>
+            </div>
+            <div>
+                <div class="text-3xl font-bold text-civic-amber">3</div>
+                <div class="text-sm text-gray-600">Partner LGAs</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-4xl mx-auto px-4 py-12">
+    <!-- How It Works -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">How It Works</h2>
+        <div class="grid md:grid-cols-4 gap-6">
+            <div class="text-center">
+                <div class="w-12 h-12 bg-civic-blue text-white rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">1</div>
+                <h3 class="font-semibold mb-2">Submit</h3>
+                <p class="text-sm text-gray-600">Create a structured motion with evidence and proposed actions</p>
+            </div>
+            <div class="text-center">
+                <div class="w-12 h-12 bg-civic-blue text-white rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">2</div>
+                <h3 class="font-semibold mb-2">Engage</h3>
+                <p class="text-sm text-gray-600">Community votes and discusses to show support</p>
+            </div>
+            <div class="text-center">
+                <div class="w-12 h-12 bg-civic-blue text-white rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">3</div>
+                <h3 class="font-semibold mb-2">Response</h3>
+                <p class="text-sm text-gray-600">Council must Accept, Modify, or Reject with reasons</p>
+            </div>
+            <div class="text-center">
+                <div class="w-12 h-12 bg-civic-blue text-white rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">4</div>
+                <h3 class="font-semibold mb-2">Track</h3>
+                <p class="text-sm text-gray-600">Monitor delivery and hold institutions accountable</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Motions -->
+    <section class="mb-12">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">Recent Motions</h2>
+            <a href="{% url 'motion_feed' %}" class="text-civic-blue hover:underline">View all &rarr;</a>
+        </div>
+
+        <div class="space-y-4">
+            {% for motion in recent_motions %}
+            <a href="{% url 'motion_detail' motion.pk %}" class="block bg-white rounded-lg shadow p-4 hover:shadow-md transition">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-semibold text-gray-900">{{ motion.title }}</h3>
+                        <p class="text-sm text-gray-500 mt-1">
+                            {{ motion.get_lga_display }} &bull; {{ motion.published_at|date:"M d" }}
+                        </p>
+                    </div>
+                    <span class="text-xs px-2 py-1 rounded-full
+                        {% if motion.jurisdiction == 'local' %}bg-blue-100 text-blue-800
+                        {% elif motion.jurisdiction == 'state' %}bg-purple-100 text-purple-800
+                        {% else %}bg-green-100 text-green-800{% endif %}">
+                        {{ motion.get_jurisdiction_display }}
+                    </span>
+                </div>
+            </a>
+            {% empty %}
+            <div class="bg-white rounded-lg shadow p-8 text-center">
+                <p class="text-gray-600">No motions yet. Be the first to create one!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- LGA Coverage -->
+    <section>
+        <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Serving the Hunter Region</h2>
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-lg shadow p-6 text-center">
+                <h3 class="font-semibold text-lg mb-2">Newcastle</h3>
+                <p class="text-sm text-gray-600">Newcastle City Council</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 text-center">
+                <h3 class="font-semibold text-lg mb-2">Lake Macquarie</h3>
+                <p class="text-sm text-gray-600">Lake Macquarie City Council</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 text-center">
+                <h3 class="font-semibold text-lg mb-2">Port Stephens</h3>
+                <p class="text-sm text-gray-600">Port Stephens Council</p>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

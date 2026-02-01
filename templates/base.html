@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Odyssey{% endblock %} | Youth Civic Engagement Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'civic-blue': '#1e40af',
+                        'civic-green': '#059669',
+                        'civic-amber': '#d97706',
+                        'civic-red': '#dc2626',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Navigation -->
+    <nav class="bg-civic-blue text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'home' %}" class="text-xl font-bold">Odyssey</a>
+                    <span class="ml-2 text-sm text-blue-200">Hunter Youth Civic Network</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'motion_feed' %}" class="hover:text-blue-200">Motions</a>
+                    <a href="{% url 'public_dashboard' %}" class="hover:text-blue-200">Dashboard</a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'motion_create' %}" class="bg-white text-civic-blue px-4 py-2 rounded-lg font-medium hover:bg-blue-50">
+                            New Motion
+                        </a>
+                        <div class="relative group">
+                            <button class="flex items-center hover:text-blue-200">
+                                {{ user.username }}
+                                <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block z-10">
+                                <a href="{% url 'profile' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Profile</a>
+                                {% if user.is_admin or user.is_staff %}
+                                <a href="{% url 'admin:index' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Admin</a>
+                                {% endif %}
+                                <a href="{% url 'logout' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Sign Out</a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="hover:text-blue-200">Sign In</a>
+                        <a href="{% url 'signup' %}" class="bg-white text-civic-blue px-4 py-2 rounded-lg font-medium hover:bg-blue-50">
+                            Join Now
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Announcements -->
+    {% if announcements %}
+    <div class="bg-amber-50 border-b border-amber-200">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            {% for announcement in announcements %}
+            <div class="flex items-center text-amber-800">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 3a1 1 0 00-1.447-.894L8.763 6H5a3 3 0 000 6h.28l1.771 5.316A1 1 0 008 18h1a1 1 0 001-1v-4.382l6.553 3.276A1 1 0 0018 15V3z" clip-rule="evenodd"/>
+                </svg>
+                <strong>{{ announcement.title }}:</strong>
+                <span class="ml-1">{{ announcement.content }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 mt-4">
+        {% for message in messages %}
+        <div class="p-4 rounded-lg mb-2 {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-white font-bold mb-2">Odyssey Portal</h3>
+                    <p class="text-sm">Empowering youth civic participation across Newcastle, Lake Macquarie, and Port Stephens.</p>
+                </div>
+                <div>
+                    <h3 class="text-white font-bold mb-2">LGAs</h3>
+                    <ul class="text-sm space-y-1">
+                        <li>Newcastle City Council</li>
+                        <li>Lake Macquarie City Council</li>
+                        <li>Port Stephens Council</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-white font-bold mb-2">Resources</h3>
+                    <ul class="text-sm space-y-1">
+                        <li><a href="#" class="hover:text-white">Community Guidelines</a></li>
+                        <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-white">Child Safety</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-4 text-sm text-center">
+                Hunter Youth Civic Power-Share Network
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ motion.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-8 px-4">
+    <!-- Back Link -->
+    <a href="{% url 'motion_feed' %}" class="text-civic-blue hover:underline mb-4 inline-block">&larr; Back to feed</a>
+
+    <!-- Motion Card -->
+    <div class="bg-white rounded-xl shadow-lg p-8 mb-6">
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">{{ motion.title }}</h1>
+                <p class="text-gray-500 mt-1">
+                    by {{ motion.author.username }} &bull; {{ motion.get_lga_display }} &bull; {{ motion.published_at|date:"F d, Y" }}
+                </p>
+            </div>
+            <div class="flex flex-col items-end gap-2">
+                <span class="text-xs px-3 py-1 rounded-full
+                    {% if motion.jurisdiction == 'local' %}bg-blue-100 text-blue-800
+                    {% elif motion.jurisdiction == 'state' %}bg-purple-100 text-purple-800
+                    {% else %}bg-green-100 text-green-800{% endif %}">
+                    {{ motion.get_jurisdiction_display }}
+                </span>
+                <span class="text-xs px-3 py-1 rounded-full
+                    {% if motion.status == 'published' %}bg-blue-100 text-blue-800
+                    {% elif motion.status == 'accepted' %}bg-green-100 text-green-800
+                    {% elif motion.status == 'modified' %}bg-amber-100 text-amber-800
+                    {% elif motion.status == 'rejected' %}bg-red-100 text-red-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ motion.get_status_display }}
+                </span>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div>
+                <h2 class="text-sm font-semibold text-gray-500 uppercase mb-2">Evidence & Lived Experience</h2>
+                <p class="text-gray-700">{{ motion.evidence|linebreaks }}</p>
+            </div>
+
+            <div>
+                <h2 class="text-sm font-semibold text-gray-500 uppercase mb-2">Proposed Action</h2>
+                <p class="text-gray-700">{{ motion.proposed_action|linebreaks }}</p>
+            </div>
+
+            <div>
+                <h2 class="text-sm font-semibold text-gray-500 uppercase mb-2">Resource Ask (Micro-Budget)</h2>
+                <p class="text-gray-700">{{ motion.resource_ask|linebreaks }}</p>
+            </div>
+
+            <div>
+                <h2 class="text-sm font-semibold text-gray-500 uppercase mb-2">Success Measures</h2>
+                <p class="text-gray-700">{{ motion.success_measures|linebreaks }}</p>
+            </div>
+
+            {% if motion.safeguarding_considerations %}
+            <div>
+                <h2 class="text-sm font-semibold text-gray-500 uppercase mb-2">Safeguarding Considerations</h2>
+                <p class="text-gray-700">{{ motion.safeguarding_considerations|linebreaks }}</p>
+            </div>
+            {% endif %}
+
+            {% if motion.inclusion_considerations %}
+            <div>
+                <h2 class="text-sm font-semibold text-gray-500 uppercase mb-2">Inclusion Considerations</h2>
+                <p class="text-gray-700">{{ motion.inclusion_considerations|linebreaks }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Voting -->
+        <div class="mt-8 pt-6 border-t border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'motion_vote' motion.pk %}" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="vote_type" value="approve">
+                        <button type="submit" class="flex items-center px-4 py-2 rounded-lg transition
+                            {% if user_vote == 'approve' %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-600 hover:bg-green-50{% endif %}">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
+                            </svg>
+                            Approve ({{ motion.approval_count }})
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'motion_vote' motion.pk %}" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="vote_type" value="disapprove">
+                        <button type="submit" class="flex items-center px-4 py-2 rounded-lg transition
+                            {% if user_vote == 'disapprove' %}bg-red-100 text-red-700{% else %}bg-gray-100 text-gray-600 hover:bg-red-50{% endif %}">
+                            <svg class="w-5 h-5 mr-2 transform rotate-180" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
+                            </svg>
+                            Disapprove ({{ motion.disapproval_count }})
+                        </button>
+                    </form>
+                    {% else %}
+                    <p class="text-gray-500"><a href="{% url 'login' %}" class="text-civic-blue hover:underline">Sign in</a> to vote</p>
+                    {% endif %}
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    {% if user == motion.author %}
+                    <a href="{% url 'motion_edit' motion.pk %}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Edit</a>
+                    {% endif %}
+                    {% if user.is_accountable_owner or user.is_staff %}
+                    <a href="{% url 'motion_respond' motion.pk %}" class="px-4 py-2 bg-civic-blue text-white rounded-lg hover:bg-blue-700">Respond</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Official Response -->
+    {% if motion.response %}
+    <div class="bg-white rounded-xl shadow-lg p-8 mb-6 border-l-4
+        {% if motion.response.decision == 'accept' %}border-green-500
+        {% elif motion.response.decision == 'modify' %}border-amber-500
+        {% else %}border-red-500{% endif %}">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">
+            Official Response
+            <span class="ml-2 text-sm font-normal px-2 py-1 rounded-full
+                {% if motion.response.decision == 'accept' %}bg-green-100 text-green-800
+                {% elif motion.response.decision == 'modify' %}bg-amber-100 text-amber-800
+                {% else %}bg-red-100 text-red-800{% endif %}">
+                {{ motion.response.get_decision_display }}
+            </span>
+        </h2>
+
+        <p class="text-sm text-gray-500 mb-4">
+            From {{ motion.response.accountable_owner.username }} &bull; {{ motion.response.created_at|date:"F d, Y" }}
+        </p>
+
+        <div class="space-y-4">
+            <div>
+                <h3 class="text-sm font-semibold text-gray-500 uppercase mb-1">Reasons</h3>
+                <p class="text-gray-700">{{ motion.response.reasons|linebreaks }}</p>
+            </div>
+
+            {% if motion.response.delivery_plan %}
+            <div>
+                <h3 class="text-sm font-semibold text-gray-500 uppercase mb-1">Delivery Plan</h3>
+                <p class="text-gray-700">{{ motion.response.delivery_plan|linebreaks }}</p>
+            </div>
+            {% endif %}
+
+            {% if motion.response.due_date %}
+            <div>
+                <h3 class="text-sm font-semibold text-gray-500 uppercase mb-1">Due Date</h3>
+                <p class="text-gray-700">{{ motion.response.due_date|date:"F d, Y" }}</p>
+            </div>
+            {% endif %}
+
+            {% if motion.response.alternative_pathway %}
+            <div>
+                <h3 class="text-sm font-semibold text-gray-500 uppercase mb-1">Alternative Pathway</h3>
+                <p class="text-gray-700">{{ motion.response.alternative_pathway|linebreaks }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Comments -->
+    <div class="bg-white rounded-xl shadow-lg p-8">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Discussion ({{ comments.count }})</h2>
+
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'motion_comment' motion.pk %}" class="mb-6">
+            {% csrf_token %}
+            {{ comment_form.content }}
+            <button type="submit" class="mt-2 px-4 py-2 bg-civic-blue text-white rounded-lg hover:bg-blue-700">
+                Post Comment
+            </button>
+        </form>
+        {% else %}
+        <p class="mb-6 text-gray-500"><a href="{% url 'login' %}" class="text-civic-blue hover:underline">Sign in</a> to join the discussion</p>
+        {% endif %}
+
+        <div class="space-y-4">
+            {% for comment in comments %}
+            <div class="border-b border-gray-100 pb-4 last:border-0">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="font-medium text-gray-900">{{ comment.author.username }}</span>
+                    <span class="text-sm text-gray-500">{{ comment.created_at|date:"M d, Y H:i" }}</span>
+                </div>
+                <p class="text-gray-700">{{ comment.content }}</p>
+            </div>
+            {% empty %}
+            <p class="text-gray-500">No comments yet. Be the first to share your thoughts!</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
